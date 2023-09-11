@@ -63,7 +63,11 @@ if __name__=="__main__":
     A = rand(n, n, density=0.01, format="csr")
     B = rand(n, n, density=0.01, format="csr")
 
+    mkl_t = time()
     C = dot_product_mkl(A, B)    # dot product leads to unsorted indices
+    mid = time()
+    mkl_C = dot_product_mkl(A, B, reorder_output=True)    # dot_product_mkl provides flag to sort indices
+    mkl_t = time() - mid - (mid - mkl_t)    # time difference between reorder_output=True and reorder_output=False
 
     scipy_C = C.copy()
     scipy_t = time()
@@ -80,11 +84,11 @@ if __name__=="__main__":
     numba_sort_indices(numba_C.indptr, numba_C.indices, numba_C.data)
     numba_t = time() - numba_t
 
-    success = check_sparse_matrices_identical(scipy_C, numpy_C, numba_C)
+    success = check_sparse_matrices_identical(scipy_C, numpy_C, numba_C, mkl_C)
     if success:
-        print("All resulting matrices were identical!\n")
+        print("Success. All resulting matrices were identical!\n")
     else:
         print("FAILURE. Resulting matrices were not all identical.\n")
 
-    print( "          |   SciPy   |   NumPy   |   Numba")
-    print(f"Run times |{scipy_t: 8.3f}s  |{numpy_t: 8.3f}s  |{numba_t: 8.3f}s")
+    print( "          |   SciPy   |   NumPy   |   Numba   |    MKL")
+    print(f"Run times |{scipy_t: 8.3f}s  |{numpy_t: 8.3f}s  |{numba_t: 8.3f}s  |{mkl_t: 8.3f}s")
